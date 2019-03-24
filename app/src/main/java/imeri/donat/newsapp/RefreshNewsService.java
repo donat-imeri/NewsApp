@@ -14,7 +14,7 @@ public class RefreshNewsService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        final int refreshRate=intent.getIntExtra("refresh_rate",60);
+        final int refreshRate=intent.getIntExtra(PreferencesActivity.srefreshRate,60);
         t=new Thread(new Runnable() {
             @Override
             public void run() {
@@ -36,12 +36,16 @@ public class RefreshNewsService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+
         try {
             t.interrupt();
+            t=null;
+            stopSelf();
         }
         catch (Exception e){
 
         }
+
     }
 
     @Override

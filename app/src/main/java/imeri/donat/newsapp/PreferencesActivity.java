@@ -20,6 +20,16 @@ import java.util.List;
 
 public class PreferencesActivity extends AppCompatActivity {
 
+    public final static String preferencesTitle="Preferences";
+    public final static String stextUrl="text_url";
+    public final static String srefreshRate="refresh_rate";
+    public final static String snumberItems="number_items";
+    public final static String srefreshIndex="refresh_index";
+    public final static String snumberIndex="number_index";
+    public final static String schanged="changed";
+    public final static String schangedRate="changedRate"; //frequency changed
+    public final static String sconfiguration="configuration";
+
     private String text_url;
     private Spinner spnRefresh;
     private Spinner spnNumberItems;
@@ -31,7 +41,7 @@ public class PreferencesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_preferences);
-        setTitle("Preferences");
+        setTitle(preferencesTitle);
 
         submitBtn=findViewById(R.id.button_submit);
         urlText=findViewById(R.id.text_url);
@@ -48,12 +58,12 @@ public class PreferencesActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnNumberItems.setAdapter(adapter2);
 
-        sharedPref = getSharedPreferences("configuration",Context.MODE_PRIVATE);
-        if (sharedPref.getString("text_url","")!=""){
-            urlText.setText(sharedPref.getString("text_url",""));
+        sharedPref = getSharedPreferences(sconfiguration,Context.MODE_PRIVATE);
+        if (sharedPref.getString(stextUrl,"")!=""){
+            urlText.setText(sharedPref.getString(stextUrl,""));
         }
-        spnRefresh.setSelection(sharedPref.getInt("refresh_index",0));
-        spnNumberItems.setSelection(sharedPref.getInt("number_index",0));
+        spnRefresh.setSelection(sharedPref.getInt(srefreshIndex,0));
+        spnNumberItems.setSelection(sharedPref.getInt(snumberIndex,0));
 
         submitBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,25 +75,25 @@ public class PreferencesActivity extends AppCompatActivity {
 
 
                 SharedPreferences.Editor editor = sharedPref.edit();
-                String actualUrl=sharedPref.getString("text_url","");
-                int actualRate=sharedPref.getInt("refresh_rate",0);
-                int actualNumber=sharedPref.getInt("number_items",0);
+                String actualUrl=sharedPref.getString(stextUrl,"");
+                int actualRate=sharedPref.getInt(srefreshRate,0);
+                int actualNumber=sharedPref.getInt(snumberItems,0);
 
                 if ((text_url.equals("") || actualUrl.equals(text_url)) && actualRate==refreshRate
                         && actualNumber==numberItems) {
-                    editor.putBoolean("changed",false);
-                    editor.putBoolean("changedRate",false);
+                    editor.putBoolean(schanged,false);
+                    editor.putBoolean(schangedRate,false);
                     editor.apply();
                 }
                 else{
-                    editor.putString("text_url", text_url);
-                    editor.putInt("refresh_rate", refreshRate);
-                    editor.putInt("refresh_index",spnRefresh.getSelectedItemPosition());
-                    editor.putInt("number_items", numberItems);
-                    editor.putInt("number_index",spnNumberItems.getSelectedItemPosition());
-                    editor.putBoolean("changed",true);
+                    editor.putString(stextUrl, text_url);
+                    editor.putInt(srefreshRate, refreshRate);
+                    editor.putInt(srefreshIndex,spnRefresh.getSelectedItemPosition());
+                    editor.putInt(snumberItems, numberItems);
+                    editor.putInt(snumberIndex,spnNumberItems.getSelectedItemPosition());
+                    editor.putBoolean(schanged,true);
                     if (actualRate!=refreshRate)
-                        editor.putBoolean("changedRate",true);
+                        editor.putBoolean(schangedRate,true);
 
                     editor.apply();
                 }

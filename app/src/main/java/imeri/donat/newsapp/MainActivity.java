@@ -46,6 +46,10 @@ import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    public final static String smainTitle="News Feed List";
+    public final static String sinvalid="Enter a valid Rss feed url";
+
+
     private RecyclerView mRecyclerView;
     private String textURL;
     private int refreshRate;
@@ -60,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     public FilterFeed filterNews;
     private boolean manualRefresh;
     private String lastValidUrl;
+    private RefreshTimeReciever refreshReciever;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -72,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setTitle("News Feed List");
+        setTitle(smainTitle);
 
         //This method is called to provide internet functionality on older Android Phones
         updateAndroidSecurityProvider(this);
@@ -85,13 +90,14 @@ public class MainActivity extends AppCompatActivity {
 
         IntentFilter filter = new IntentFilter();
         filter.addAction("refreshNews");
-        registerReceiver(new RefreshTimeReciever(), filter);
+        refreshReciever=new RefreshTimeReciever();
+        registerReceiver(refreshReciever, filter);
 
-        sharedPref = getSharedPreferences("configuration",Context.MODE_PRIVATE);
-        lastValidUrl=sharedPref.getString("text_url", "");
+        sharedPref = getSharedPreferences(PreferencesActivity.sconfiguration,Context.MODE_PRIVATE);
+        lastValidUrl=sharedPref.getString(PreferencesActivity.stextUrl, "");
 
         SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean("changed", true);
+        editor.putBoolean(PreferencesActivity.schanged, true);
         editor.apply();
 
         mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -133,22 +139,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        sharedPref = getSharedPreferences("configuration",Context.MODE_PRIVATE);
-        if (sharedPref.getBoolean("changed",true)) {
-            textURL = sharedPref.getString("text_url", "");
-            refreshRate = sharedPref.getInt("refresh_rate", 60);
-            numberItems = sharedPref.getInt("number_items", 10);
+        sharedPref = getSharedPreferences(PreferencesActivity.sconfiguration,Context.MODE_PRIVATE);
+        if (sharedPref.getBoolean(PreferencesActivity.schanged,true)) {
+            textURL = sharedPref.getString(PreferencesActivity.stextUrl, "");
+            refreshRate = sharedPref.getInt(PreferencesActivity.srefreshRate, 60);
+            numberItems = sharedPref.getInt(PreferencesActivity.snumberItems, 10);
 
             fetchNews = new FetchFeedTask();
             fetchNews.execute((Void) null);
         }
         SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean("changed", false);
+        editor.putBoolean(PreferencesActivity.schanged, false);
         editor.apply();
-
-        Log.d("resume","resume");
-
-
     }
 
     public List<RssFeedModel> parseFeed(InputStream inputStream) throws XmlPullParserException,
@@ -270,23 +272,22 @@ public class MainActivity extends AppCompatActivity {
 
             } else {
                 Toast.makeText(MainActivity.this,
-                        "Enter a valid Rss feed url",
+                        sinvalid,
                         Toast.LENGTH_LONG).show();
                 if (!lastValidUrl.isEmpty()) {
                     SharedPreferences.Editor editor = sharedPref.edit();
-                    editor.putString("text_url", lastValidUrl);
+                    editor.putString(PreferencesActivity.stextUrl, lastValidUrl);
                     editor.apply();
-                    sharedPref = getSharedPreferences("configuration",Context.MODE_PRIVATE);
-                    textURL = sharedPref.getString("text_url", "");
+                    sharedPref = getSharedPreferences(PreferencesActivity.sconfiguration,Context.MODE_PRIVATE);
+                    textURL = sharedPref.getString(PreferencesActivity.stextUrl, "");
                 }
             }
 
             if (!manualRefresh) {
-                if (sharedPref.getBoolean("changedRate",true)){
+                if (sharedPref.getBoolean(PreferencesActivity.schangedRate,true)){
                     if(serviceIntent!=null)stopService(serviceIntent);
                     serviceIntent = new Intent(MainActivity.this, RefreshNewsService.class);
-
-                    serviceIntent.putExtra("refresh_rate", refreshRate);
+                    serviceIntent.putExtra(PreferencesActivity.srefreshRate, refreshRate);
                     startService(serviceIntent);
                 }
             }
@@ -343,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             SharedPreferences.Editor editor = sharedPref.edit();
-            editor.putBoolean("changedRate",true);
+            editor.putBoolean(PreferencesActivity.schangedRate,true);
             editor.apply();
             fetchNews=new FetchFeedTask();
             fetchNews.execute((Void) null);
@@ -367,6 +368,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(refreshReciever);
+        if (serviceIntent!=null)
         stopService(serviceIntent);
     }
 }

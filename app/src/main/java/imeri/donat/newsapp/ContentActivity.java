@@ -9,13 +9,15 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class ContentActivity extends AppCompatActivity {
+    public final static String contentTitle="Detailed Content";
+
     private WebView content;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_content);
-        setTitle("Detailed Content");
+        setTitle(contentTitle);
 
         Intent intent=getIntent();
         String urlText=intent.getStringExtra("url_text");
